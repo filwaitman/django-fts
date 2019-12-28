@@ -1,6 +1,10 @@
 "Base Fts class."
 
-from django.db import transaction
+try:
+    from django.db.transaction import atomic
+except ImportError:
+    from django.db.transaction import commit_on_success as atomic
+
 from django.db import models
 from django.conf import settings
 
@@ -76,7 +80,7 @@ class BaseModel(models.Model):
         if hasattr(self, '_search_manager'):
             self._search_manager.update_index(pk=self.pk)
 
-    @transaction.commit_on_success
+    @atomic
     def save(self, *args, **kwargs):
         super(BaseModel, self).save(*args, **kwargs)
         if hasattr(self, '_auto_reindex'):

@@ -1,6 +1,10 @@
 "Pgsql Fts backend"
 
 from django.db import transaction
+try:
+    from django.db.transaction import atomic
+except ImportError:
+    from django.db.transaction import commit_on_success as atomic
 
 from fts.backends.base import InvalidFtsBackendError
 from fts.backends.base import BaseClass, BaseModel, BaseManager
@@ -77,7 +81,7 @@ class SearchManager(BaseManager):
         f = self.model._meta.get_field(field)
         return "setweight(to_tsvector('%s', coalesce(\"%s\",'')), '%s')" % (self.language, f.column, weight)
 
-    @transaction.commit_on_success
+    @atomic
     def update_index(self, pk=None):
         from django.db import connection
         # Build a list of SQL clauses that generate tsvectors for each specified field.

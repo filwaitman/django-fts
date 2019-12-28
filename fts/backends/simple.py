@@ -4,7 +4,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.db.models import Q
 
-from django.db import transaction
+try:
+    from django.db.transaction import atomic
+except ImportError:
+    from django.db.transaction import commit_on_success as atomic
 
 from fts.backends.base import BaseClass, BaseModel, BaseManager
 from fts.models import IndexWord, Index
@@ -28,7 +31,7 @@ class SearchClass(BaseClass):
         self.backend = 'simple'
 
 class SearchManager(BaseManager):
-    @transaction.commit_on_success
+    @atomic
     def update_index(self, pk=None):
         if pk is not None:
             if isinstance(pk, (list,tuple)):
